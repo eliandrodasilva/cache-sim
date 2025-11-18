@@ -4,9 +4,9 @@
 #include <stdlib.h> // Para srand() e rand()
 #include <time.h>   // Para time()
 
-#include "details.hpp"
-#include "cache_system.hpp"
-#include "processor.hpp"
+#include "details.h"
+#include "cache_system.h"
+#include "Processor.h"
 
 // Funcao auxiliar para limpar o buffer de entrada (cin)
 void clear_cin()
@@ -17,7 +17,7 @@ void clear_cin()
 
 int main()
 {
-    // Semeia o gerador aleatorio (importante!)
+    // Semeia o gerador aleatorio (importante!) evita mesmos resultados em cada execucao
     srand(time(NULL));
 
     int total_levels;
@@ -68,24 +68,26 @@ int main()
     simulator.add_main_memory(mem_name, mem_latency);
     simulator.displayHierarchy();
 
-    // --- 2. Configuracao da Simulacao ---
-
-    int pattern_choice, num_accesses, step;
+    int pattern_choice, num_accesses, stride, buffer_size;
     double write_ratio;
 
     std::cout << "\n--- Configuracao da Simulacao ---" << std::endl;
+
+    std::cout << "Tamanho do Buffer (em bytes, ex: 1048576 para 1MB): ";
+    std::cin >> buffer_size;
+
     std::cout << "Padrao de acesso (1=Sequencial, 2=Aleatorio): ";
     std::cin >> pattern_choice;
     int pattern = (pattern_choice == 2) ? RANDOM : SEQUENTIAL;
 
     if (pattern == SEQUENTIAL)
     {
-        std::cout << "Tamanho do passo sequencial (ex: 64): ";
-        std::cin >> step;
+        std::cout << "Tamanho do stride (ex: 64 para pular de linha em linha): ";
+        std::cin >> stride;
     }
     else
     {
-        step = 1; // Nao usado
+        stride = 1; // Nao usado
     }
 
     std::cout << "Numero total de acessos: ";
@@ -93,11 +95,10 @@ int main()
     std::cout << "Proporcao de escritas (ex: 0.3 para 30%): ";
     std::cin >> write_ratio;
 
-    // --- 3. Execucao ---
-
     Processor processor(simulator.get_first_level());
-    processor.run_simulation(pattern, num_accesses, step, write_ratio);
+    processor.run_simulation(pattern, num_accesses, stride, write_ratio, buffer_size);
     processor.print_stats();
+    simulator.printHierarchyStats();
 
     return 0;
 }
